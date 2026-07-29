@@ -22,19 +22,21 @@ SE_FREE_URL = "http://free.iis.se/free"
 USER_AGENT = "brand-name-finder/1.0 (+https://github.com/lukaszlindell/brand-name-finder)"
 
 PREFIXES = [
-    "ave", "bri", "cal", "cle", "cor", "elo", "eva", "flo", "form", "fra",
-    "kai", "kin", "lin", "lo", "lum", "mar", "mer", "mon", "nori", "nova",
-    "ori", "pra", "pri", "ral", "rel", "sol", "tala", "valo", "vel", "vero",
-    "via", "viva",
+    "av", "aver", "brin", "cal", "car", "cel", "cor", "del", "elv", "ev",
+    "fel", "flor", "kal", "kel", "lin", "lum", "mar", "mer", "nav", "nor",
+    "nov", "orv", "rel", "sen", "sol", "tal", "val", "vel", "ver", "vir",
 ]
 SUFFIXES = [
-    "able", "ara", "aro", "ava", "era", "ero", "eva", "ia", "io", "ira",
-    "ivo", "ly", "ora", "oro", "ova", "ra", "ria", "ro", "va", "via", "vo",
+    "a", "ael", "an", "ara", "aro", "ava", "en", "ena", "eno", "era", "ero",
+    "ia", "ian", "io", "ion", "ira", "iro", "ora", "oro", "um", "una",
+    "uno", "via", "vo",
 ]
 CURATED = [
     "Kindred", "Tandem", "Outline", "Resonant", "Grounded", "Formable",
     "Craftable", "Gatherly", "Forwardly", "Frameable", "Signalise",
     "Clarity", "Current", "Relay", "Beacon", "Canvas", "Thread", "Plainly",
+    "Avenor", "Corvia", "Velion", "Norevo", "Norvio", "Movara", "Cevora",
+    "Virelo", "Brinor", "Orvian", "Velora", "Novora", "Averra", "Elvora",
 ]
 BLOCKED_PARTS = {
     "porn", "fuck", "shit", "nazi", "isis", "kkk", "drug", "kill", "scam",
