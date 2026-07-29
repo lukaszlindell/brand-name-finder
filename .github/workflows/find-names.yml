@@ -1,0 +1,74 @@
+name: Hitta lediga varumärkesnamn
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_names:
+        description: "Hur många namn ska kontrolleras? (1–500)"
+        required: true
+        default: "200"
+      seed:
+        description: "Ändra talet för en ny blandning av namn"
+        required: true
+        default: "42"
+      custom_names:
+        description: "Valfria egna namn, separerade med kommatecken"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: brand-name-finder
+  cancel-in-progress: false
+
+jobs:
+  find-names:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Hämta repot
+        uses: actions/checkout@v4
+
+      - name: Installera Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installera beroenden
+        run: pip install -r requirements.txt
+
+      - name: Generera och kontrollera namn
+        env:
+          MAX_NAMES: ${{ inputs.max_names }}
+          SEED: ${{ inputs.seed }}
+          CUSTOM_NAMES: ${{ inputs.custom_names }}
+        run: |
+          python brand_name_finder.py \
+            --max-names "$MAX_NAMES" \
+            --seed "$SEED" \
+            --custom "$CUSTOM_NAMES"
+
+      - name: Lägg resultatet i körningens sammanfattning
+        run: cat results/RESULTS.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Spara CSV, Markdown och HTML som nedladdningsbara filer
+        uses: actions/upload-artifact@v4
+        with:
+          name: brand-name-results
+          path: results/
+          retention-days: 30
+
+      - name: Uppdatera resultatfilerna i repot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/results.csv results/RESULTS.md results/results.html
+          if git diff --cached --quiet; then
+            echo "Inga resultatfiler ändrades."
+          else
+            git commit -m "Update brand name results"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
