@@ -103,6 +103,26 @@ def generate_names(seed: int, custom_names: list[str]) -> list[str]:
     return result
 
 
+def load_names_file(path: Path) -> list[str]:
+    """Load an ordered, deduplicated list of hand-curated names."""
+    seen: set[str] = set()
+    names: list[str] = []
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        name = raw_line.strip()
+        if not name or name.startswith("#"):
+            continue
+        value = normalize(name)
+        if not 4 <= len(value) <= 16:
+            raise ValueError(f"Ogiltig längd i namnfilen: {name}")
+        if value in seen:
+            continue
+        seen.add(value)
+        names.append(name)
+    if not names:
+        raise ValueError("Namnfilen innehåller inga namn")
+    return names
+
+
 def request_with_retries(
     session: requests.Session,
     url: str,
@@ -344,6 +364,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--delay", type=float, default=0.2)
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
     parser.add_argument("--custom", default="", help="Kommaavgränsade egna namn")
+    parser.add_argument(
+        "--names-file",
+        type=Path,
+        help="Kontrollera exakt dessa namn, ett namn per rad, i angiven ordning",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Skippa nätverksuppslag")
     return parser.parse_args()
 
@@ -353,7 +378,11 @@ def main() -> None:
     if not 1 <= args.max_names <= 500:
         raise SystemExit("--max-names måste vara mellan 1 och 500")
     custom = [item.strip() for item in args.custom.split(",") if item.strip()]
-    names = generate_names(args.seed, custom)
+    names = (
+        load_names_file(args.names_file)
+        if args.names_file
+        else generate_names(args.seed, custom)
+    )
     rows = check_names(names, args.max_names, max(0.05, args.delay), args.dry_run)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     write_csv(rows, args.output_dir / "results.csv")
