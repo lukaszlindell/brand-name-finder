@@ -15,6 +15,14 @@ on:
         description: "Valfria egna namn, separerade med kommatecken"
         required: false
         default: ""
+      names_file:
+        description: "Valfri fil med ett kuraterat namn per rad"
+        required: false
+        default: ""
+      output_dir:
+        description: "Mapp där den nya rapporten ska sparas"
+        required: true
+        default: "results"
 
 permissions:
   contents: write
@@ -45,27 +53,39 @@ jobs:
           MAX_NAMES: ${{ inputs.max_names }}
           SEED: ${{ inputs.seed }}
           CUSTOM_NAMES: ${{ inputs.custom_names }}
+          NAMES_FILE: ${{ inputs.names_file }}
+          OUTPUT_DIR: ${{ inputs.output_dir }}
         run: |
-          python brand_name_finder.py \
-            --max-names "$MAX_NAMES" \
-            --seed "$SEED" \
+          args=(
+            --max-names "$MAX_NAMES"
+            --seed "$SEED"
             --custom "$CUSTOM_NAMES"
+            --output-dir "$OUTPUT_DIR"
+          )
+          if [[ -n "$NAMES_FILE" ]]; then
+            args+=(--names-file "$NAMES_FILE")
+          fi
+          python brand_name_finder.py "${args[@]}"
 
       - name: Lägg resultatet i körningens sammanfattning
-        run: cat results/RESULTS.md >> "$GITHUB_STEP_SUMMARY"
+        env:
+          OUTPUT_DIR: ${{ inputs.output_dir }}
+        run: cat "$OUTPUT_DIR/RESULTS.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Spara CSV, Markdown och HTML som nedladdningsbara filer
         uses: actions/upload-artifact@v4
         with:
-          name: brand-name-results
-          path: results/
+          name: brand-name-results-${{ github.run_number }}
+          path: ${{ inputs.output_dir }}/
           retention-days: 30
 
       - name: Uppdatera resultatfilerna i repot
+        env:
+          OUTPUT_DIR: ${{ inputs.output_dir }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/results.csv results/RESULTS.md results/results.html
+          git add "$OUTPUT_DIR"
           if git diff --cached --quiet; then
             echo "Inga resultatfiler ändrades."
           else
